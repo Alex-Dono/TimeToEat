@@ -1,16 +1,19 @@
 package com.timetoeat
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.snackbar.Snackbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.timetoeat.databinding.ActivityRegistrationBinding
-import com.timetoeat.utils.Utils
 
 private lateinit var binding: ActivityRegistrationBinding
+private const val MY_PERMISSIONS_REQUEST_LOCATION = 1
 
 class RegistrationActivity : AppCompatActivity() {
 
@@ -31,9 +34,22 @@ class RegistrationActivity : AppCompatActivity() {
         binding.signIn.setOnClickListener {
             signIn(binding.email.text.toString(), binding.password.text.toString())
         }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+            // Request permission
+            ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                MY_PERMISSIONS_REQUEST_LOCATION)
+        }
     }
 
     private fun signIn(email: String, password: String) {
+        if (nullField(email, password)) {
+            Toast.makeText(baseContext, "Field not filled.",
+                Toast.LENGTH_SHORT).show()
+            return
+        }
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
@@ -57,6 +73,12 @@ class RegistrationActivity : AppCompatActivity() {
 
     private fun register(email: String, password: String) {
         Log.d("RegistrationActivity", "Register function called with email: $email")
+        if (nullField(email, password)) {
+            Toast.makeText(baseContext, "Field not filled.",
+                Toast.LENGTH_SHORT).show()
+            return
+        }
+
         if (!isValidEmail(email)) {
             Toast.makeText(baseContext, "Invalid email format.",
                 Toast.LENGTH_SHORT).show()
@@ -102,8 +124,32 @@ class RegistrationActivity : AppCompatActivity() {
         return true
     }
 
+    private fun nullField(email: String, password: String): Boolean {
+        if (email == "" || password == "") {
+            return true
+        }
+        return false
+    }
+
     private fun updateUI(user: FirebaseUser?) {
         // Update your UI here based on user authentication status
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            MY_PERMISSIONS_REQUEST_LOCATION -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permission was granted
+                    Log.i("Message:", "Allowed")
+                } else {
+                    // Permission was denied
+                    Log.i("Message:", "Denied")
+                }
+                return
+            }
+            // Handle other permission requests here if needed
+        }
     }
 
 }
