@@ -118,7 +118,9 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private fun updateUI(user: FirebaseUser?) {
-        startActivity(Intent(this, MainActivity::class.java))
+        val intent = Intent(this, MainActivity::class.java)
+        intent.putExtra("userUID", user?.uid)
+        startActivity(intent)
     }
 
 }
